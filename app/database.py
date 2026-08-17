@@ -627,3 +627,14 @@ def get_stats(database_path: str) -> dict[str, int]:
         "duplicates_blocked": int(duplicates),
     }
 
+
+def reset_state(database_path: str) -> dict[str, int]:
+    with connect(database_path) as con:
+        con.execute("BEGIN IMMEDIATE")
+        con.execute("DELETE FROM duplicate_blocks")
+        con.execute("DELETE FROM delivery_jobs")
+        con.execute("DELETE FROM inbound_events")
+        con.execute("DELETE FROM comments")
+        con.execute("DELETE FROM rules")
+        con.commit()
+    return get_stats(database_path)
