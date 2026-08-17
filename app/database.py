@@ -628,13 +628,12 @@ def get_stats(database_path: str) -> dict[str, int]:
     }
 
 
-def reset_state(database_path: str) -> dict[str, int]:
+def cleanup_comment_state(database_path: str, event_id: str, comment_id: str) -> dict[str, int]:
     with connect(database_path) as con:
         con.execute("BEGIN IMMEDIATE")
-        con.execute("DELETE FROM duplicate_blocks")
-        con.execute("DELETE FROM delivery_jobs")
-        con.execute("DELETE FROM inbound_events")
-        con.execute("DELETE FROM comments")
-        con.execute("DELETE FROM rules")
+        con.execute("DELETE FROM duplicate_blocks WHERE event_id = ? OR comment_id = ?", (event_id, comment_id))
+        con.execute("DELETE FROM delivery_jobs WHERE comment_id = ?", (comment_id,))
+        con.execute("DELETE FROM inbound_events WHERE event_id = ?", (event_id,))
+        con.execute("DELETE FROM comments WHERE comment_id = ?", (comment_id,))
         con.commit()
     return get_stats(database_path)

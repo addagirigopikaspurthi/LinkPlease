@@ -25,6 +25,11 @@ class RuleCreate(BaseModel):
     dm_message: str = Field(min_length=1)
 
 
+class CleanupRequest(BaseModel):
+    event_id: str = Field(min_length=1)
+    comment_id: str = Field(min_length=1)
+
+
 class RollingRateLimiter:
     def __init__(self, limit: int, window_seconds: int) -> None:
         self.limit = limit
@@ -360,8 +365,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         settings_for_request: Settings = request.app.state.settings
         return await asyncio.to_thread(db.get_stats, settings_for_request.database_path)
 
-    @app.post("/admin/reset")
-    async def admin_reset(request: Request) -> dict[str, int]:
+    @app.post("/admin/cleanup-comment")
+    async def admin_cleanup_comment(cleanup: CleanupRequest, request: Request) -> dict[str, int]:
         settings_for_request: Settings = request.app.state.settings
         if not settings_for_request.api_key:
             raise HTTPException(status_code=503, detail="admin secret is not configured")
@@ -370,7 +375,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if not supplied_key or not hmac.compare_digest(supplied_key, settings_for_request.api_key):
             raise HTTPException(status_code=401, detail="invalid admin key")
 
-        return await asyncio.to_thread(db.reset_state, settings_for_request.database_path)
+        return await asyncio.to_thread(
+            db.cleanup_comment_state,
+            settings_for_request.database_path,
+            cleanup.event_id,
+            cleanup.comment_id,
+        )
 
     return app
 
