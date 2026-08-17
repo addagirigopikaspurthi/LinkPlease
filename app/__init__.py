@@ -1,0 +1,1 @@
+"""LinkPlease assignment service."""

@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: linkplease-pseudogram
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeploy: true
+    maxShutdownDelaySeconds: 120
+    disk:
+      name: linkplease-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_PATH
+        value: /data/linkplease.db
+      - key: PSEUDOGRAM_API_BASE_URL
+        value: https://pseudogram-api.onrender.com
+      - key: VERIFY_WEBHOOK_SIGNATURES
+        value: "true"
+      - key: MAX_SEND_ATTEMPTS
+        value: "12"
+      - key: SEND_RATE_LIMIT
+        value: "10"
+      - key: SEND_RATE_WINDOW_SECONDS
+        value: "60"
+      - key: PSEUDOGRAM_API_KEY
+        sync: false
