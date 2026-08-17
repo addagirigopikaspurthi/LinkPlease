@@ -539,6 +539,22 @@ def mark_status_delivered(database_path: str, job_id: str) -> None:
         )
 
 
+def mark_send_delivered(database_path: str, job_id: str, dm_id: str) -> None:
+    now = iso_now()
+    with connect(database_path) as con:
+        con.execute(
+            """
+            UPDATE delivery_jobs
+            SET status = 'delivered',
+                dm_id = ?,
+                last_error = NULL,
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (dm_id, now, job_id),
+        )
+
+
 def keep_waiting_for_delivery(
     database_path: str,
     job_id: str,

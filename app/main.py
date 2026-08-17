@@ -147,17 +147,35 @@ async def send_worker(settings: Settings, stop_event: asyncio.Event) -> None:
                 )
                 continue
 
-            if response.status_code == 202:
+            if response.status_code in {200, 202}:
                 body = response.json()
                 dm_id = body.get("dm_id")
                 if isinstance(dm_id, str) and dm_id:
-                    await asyncio.to_thread(
-                        db.mark_send_accepted,
-                        settings.database_path,
-                        job["id"],
-                        dm_id,
-                        settings.status_poll_seconds,
-                    )
+                    dm_status = body.get("status")
+                    if dm_status == "delivered":
+                        await asyncio.to_thread(
+                            db.mark_send_delivered,
+                            settings.database_path,
+                            job["id"],
+                            dm_id,
+                        )
+                    elif dm_status == "failed":
+                        await asyncio.to_thread(
+                            db.retry_after_delivery_failure,
+                            settings.database_path,
+                            job["id"],
+                            "PseudoGram reported delivery failed during send",
+                            retry_delay(job["attempts"]),
+                            settings.max_send_attempts,
+                        )
+                    else:
+                        await asyncio.to_thread(
+                            db.mark_send_accepted,
+                            settings.database_path,
+                            job["id"],
+                            dm_id,
+                            settings.status_poll_seconds,
+                        )
                 else:
                     await asyncio.to_thread(
                         db.reschedule_send,
