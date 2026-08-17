@@ -389,6 +389,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             cleanup.comment_id,
         )
 
+    @app.get("/admin/job-summary")
+    async def admin_job_summary(request: Request) -> dict[str, Any]:
+        settings_for_request: Settings = request.app.state.settings
+        if not settings_for_request.api_key:
+            raise HTTPException(status_code=503, detail="admin secret is not configured")
+
+        supplied_key = request.headers.get("X-Admin-Key") or request.headers.get("X-API-Key")
+        if not supplied_key or not hmac.compare_digest(supplied_key, settings_for_request.api_key):
+            raise HTTPException(status_code=401, detail="invalid admin key")
+
+        return await asyncio.to_thread(db.get_job_summary, settings_for_request.database_path)
+
     return app
 
 

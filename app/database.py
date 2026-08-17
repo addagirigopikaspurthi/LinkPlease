@@ -637,3 +637,28 @@ def cleanup_comment_state(database_path: str, event_id: str, comment_id: str) ->
         con.execute("DELETE FROM comments WHERE comment_id = ?", (comment_id,))
         con.commit()
     return get_stats(database_path)
+
+
+def get_job_summary(database_path: str) -> dict[str, Any]:
+    with connect(database_path) as con:
+        status_rows = con.execute(
+            """
+            SELECT status, COUNT(*) AS count, MIN(attempts) AS min_attempts, MAX(attempts) AS max_attempts
+            FROM delivery_jobs
+            GROUP BY status
+            ORDER BY status
+            """
+        ).fetchall()
+        recent_rows = con.execute(
+            """
+            SELECT id, status, attempts, status_checks, send_cycle, dm_id, next_attempt_at, last_error, updated_at
+            FROM delivery_jobs
+            ORDER BY updated_at DESC
+            LIMIT 10
+            """
+        ).fetchall()
+    return {
+        "stats": get_stats(database_path),
+        "statuses": [dict(row) for row in status_rows],
+        "recent_jobs": [dict(row) for row in recent_rows],
+    }
