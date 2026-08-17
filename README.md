@@ -17,7 +17,7 @@ The service implements:
 - `POST /rules`
 - `POST /webhook`
 - `GET /stats`
-- webhook HMAC verification when `PSEUDOGRAM_API_KEY` is configured
+- webhook HMAC verification support when `PSEUDOGRAM_API_KEY` is configured
 - durable inbound event storage
 - duplicate prevention by `(rule_id, user_id)`
 - retrying DM sends on network errors, `429`, and `5xx`
@@ -48,6 +48,7 @@ Set `PSEUDOGRAM_API_KEY` in `.env` after applying for a key.
 
 The app loads `.env` automatically for local development.
 If you want to test `/webhook` before you have a key, set `VERIFY_WEBHOOK_SIGNATURES=false` locally only.
+The Render config sets `STRICT_WEBHOOK_SIGNATURES=false` so simulator traffic is not dropped if its signature header differs from the written spec. Set `STRICT_WEBHOOK_SIGNATURES=true` only after confirming live simulator requests include the expected HMAC header.
 
 Run locally:
 

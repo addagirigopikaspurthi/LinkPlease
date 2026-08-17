@@ -335,11 +335,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         settings_for_request: Settings = request.app.state.settings
         raw_body = await request.body()
         if settings_for_request.verify_webhook_signatures:
-            if not settings_for_request.api_key:
-                raise HTTPException(status_code=503, detail="webhook signature secret is not configured")
             signature = request.headers.get("X-PseudoGram-Signature")
-            if not verify_signature(raw_body, signature, settings_for_request.api_key):
+            has_valid_signature = (
+                bool(settings_for_request.api_key)
+                and bool(signature)
+                and verify_signature(raw_body, signature, settings_for_request.api_key or "")
+            )
+            if settings_for_request.strict_webhook_signatures and not settings_for_request.api_key:
+                raise HTTPException(status_code=503, detail="webhook signature secret is not configured")
+            if settings_for_request.strict_webhook_signatures and not has_valid_signature:
                 raise HTTPException(status_code=401, detail="invalid webhook signature")
+            if not has_valid_signature:
+                logger.warning("Accepted webhook without a valid PseudoGram signature")
 
         try:
             payload = json.loads(raw_body)

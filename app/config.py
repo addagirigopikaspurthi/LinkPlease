@@ -22,6 +22,7 @@ class Settings:
     api_key: str | None
     database_path: str
     verify_webhook_signatures: bool
+    strict_webhook_signatures: bool
     disable_workers: bool
     max_send_attempts: int
     send_rate_limit: int
@@ -37,6 +38,7 @@ def get_settings() -> Settings:
         api_key=api_key,
         database_path=os.getenv("DATABASE_PATH", "./linkplease.db"),
         verify_webhook_signatures=_bool_env("VERIFY_WEBHOOK_SIGNATURES", True),
+        strict_webhook_signatures=_bool_env("STRICT_WEBHOOK_SIGNATURES", False),
         disable_workers=_bool_env("DISABLE_WORKERS", False),
         max_send_attempts=int(os.getenv("MAX_SEND_ATTEMPTS", "12")),
         send_rate_limit=int(os.getenv("SEND_RATE_LIMIT", "10")),

@@ -253,6 +253,7 @@ def make_settings(database_path, api_key: str | None, verify: bool) -> Settings:
         api_key=api_key,
         database_path=str(database_path),
         verify_webhook_signatures=verify,
+        strict_webhook_signatures=verify,
         disable_workers=True,
         max_send_attempts=12,
         send_rate_limit=10,

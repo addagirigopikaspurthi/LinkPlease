@@ -19,6 +19,8 @@ services:
         value: https://pseudogram-api.onrender.com
       - key: VERIFY_WEBHOOK_SIGNATURES
         value: "true"
+      - key: STRICT_WEBHOOK_SIGNATURES
+        value: "false"
       - key: MAX_SEND_ATTEMPTS
         value: "12"
       - key: SEND_RATE_LIMIT
